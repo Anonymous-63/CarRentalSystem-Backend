@@ -7,7 +7,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 class CarRentalSystemBackendApplicationTests {
 
 	@Test
-	void contextLoads() {
+	void contextLoads() {  // Test if the application context loads
 	}
 
 }

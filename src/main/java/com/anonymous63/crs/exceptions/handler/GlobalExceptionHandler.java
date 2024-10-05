@@ -1,6 +1,7 @@
 package com.anonymous63.crs.exceptions.handler;
 
 import com.anonymous63.crs.dtos.ErrorDto;
+import com.anonymous63.crs.exceptions.DuplicateResourceException;
 import com.anonymous63.crs.exceptions.ResourceNotFoundException;
 import com.anonymous63.crs.payloads.response.APIResponse;
 import org.springframework.http.HttpStatus;
@@ -13,16 +14,19 @@ import java.util.Collections;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    /**
-     * Handle ResourceNotFoundException
-     *
-     * @param ex ResourceNotFoundException
-     * @return APIResponse
-     */
     @ExceptionHandler(ResourceNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public APIResponse<ErrorDto> handleResourceNotFoundException(ResourceNotFoundException ex) {
 
+        return APIResponse.<ErrorDto>builder()
+                .status(false)
+                .errors(Collections.singletonList(new ErrorDto("", ex.getMessage())))
+                .build();
+    }
+
+    @ExceptionHandler(DuplicateResourceException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public APIResponse<ErrorDto> handleDuplicateResourceException(DuplicateResourceException ex) {
         return APIResponse.<ErrorDto>builder()
                 .status(false)
                 .errors(Collections.singletonList(new ErrorDto("", ex.getMessage())))
