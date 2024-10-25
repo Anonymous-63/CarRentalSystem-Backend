@@ -6,13 +6,14 @@ import com.anonymous63.crs.services.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/user")
-public class UserController {
+@RequestMapping("/user")
+public class UserController implements CrudController<UserDto, Long> {
 
     private final UserService userService;
 
@@ -20,8 +21,8 @@ public class UserController {
         this.userService = userService;
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<APIResponse<UserDto>> getUser(@PathVariable Long id){
+    @Override
+    public ResponseEntity<APIResponse<UserDto>> get(Long id) {
         UserDto retrievedUser = this.userService.findById(id);
         APIResponse<UserDto> response = APIResponse.<UserDto>builder()
                 .status(true)
@@ -31,8 +32,8 @@ public class UserController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @GetMapping("/")
-    public ResponseEntity<APIResponse<List<UserDto>>> getAllUsers() {
+    @Override
+    public ResponseEntity<APIResponse<List<UserDto>>> getAll() {
         List<UserDto> allUsers = this.userService.findAll();
         APIResponse<List<UserDto>> response = APIResponse.<List<UserDto>>builder()
                 .status(true)
@@ -42,9 +43,9 @@ public class UserController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @PostMapping("/")
-    public ResponseEntity<APIResponse<UserDto>> createUser(@Valid @RequestBody UserDto userDto) {
-        UserDto createdUser = this.userService.save(userDto);
+    @Override
+    public ResponseEntity<APIResponse<UserDto>> create(UserDto entity) {
+        UserDto createdUser = this.userService.save(entity);
 
         APIResponse<UserDto> response = APIResponse.<UserDto>builder()
                 .status(true)
@@ -52,13 +53,12 @@ public class UserController {
                 .results(createdUser)
                 .build();
 
-        return new ResponseEntity<>(response, HttpStatus.CREATED);  // Explicitly set HTTP status to 201 (Created)
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-
-    @PutMapping("/{id}")
-    public ResponseEntity<APIResponse<UserDto>> updateUser(@PathVariable Long id, @RequestBody UserDto userDto) {
-        UserDto updatedUser = this.userService.update(id, userDto);
+    @Override
+    public ResponseEntity<APIResponse<UserDto>> update(Long id, UserDto entity) {
+        UserDto updatedUser = this.userService.update(id, entity);
         APIResponse<UserDto> response = APIResponse.<UserDto>builder()
                 .status(true)
                 .message("User updated successfully")
@@ -67,8 +67,8 @@ public class UserController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-    @PostMapping("enable")
-    public ResponseEntity<APIResponse<List<UserDto>>> enableUser(@RequestBody List<Long> ids){
+    @Override
+    public ResponseEntity<APIResponse<List<UserDto>>> enable(List<Long> ids) {
         List<UserDto> enabledUsers = this.userService.enable(ids);
         APIResponse<List<UserDto>> response = APIResponse.<List<UserDto>>builder()
                 .status(true)
@@ -78,8 +78,8 @@ public class UserController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @PostMapping("/disable")
-    public ResponseEntity<APIResponse<List<UserDto>>> disableUser(@RequestBody List<Long> ids){
+    @Override
+    public ResponseEntity<APIResponse<List<UserDto>>> disable(List<Long> ids) {
         List<UserDto> disabledUser = this.userService.disable(ids);
         APIResponse<List<UserDto>> response = APIResponse.<List<UserDto>>builder()
                 .status(true)
@@ -89,8 +89,8 @@ public class UserController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @DeleteMapping("/delete")
-    public ResponseEntity<APIResponse<List<UserDto>>> deleteUser(@RequestBody List<Long> ids){
+    @Override
+    public ResponseEntity<APIResponse<List<UserDto>>> delete(List<Long> ids) {
         List<UserDto> deletedUser = this.userService.delete(ids);
         APIResponse<List<UserDto>> response = APIResponse.<List<UserDto>>builder()
                 .status(true)
@@ -100,8 +100,8 @@ public class UserController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @DeleteMapping("/deleteAll")
-    public ResponseEntity<APIResponse<String>> deleteAllUser(){
+    @Override
+    public ResponseEntity<APIResponse<String>> deleteAll() {
         this.userService.deleteAll();
         APIResponse<String> response = APIResponse.<String>builder()
                 .status(true)
@@ -109,7 +109,4 @@ public class UserController {
                 .build();
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
-
-
-
 }
