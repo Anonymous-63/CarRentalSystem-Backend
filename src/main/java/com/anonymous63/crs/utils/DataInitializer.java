@@ -39,16 +39,16 @@ public class DataInitializer implements CommandLineRunner {
         );
         this.privilegeRepo.saveAll(privileges);
 
-        Privilege createPrivilege = this.privilegeRepo.findById(1L).orElseThrow(() -> new ResourceNotFoundException("Privilege", "id", 1L));
-        Privilege readPrivilege = this.privilegeRepo.findById(2L).orElseThrow(() -> new ResourceNotFoundException("Privilege", "id", 1L));
-        Privilege updatePrivilege = this.privilegeRepo.findById(3L).orElseThrow(() -> new ResourceNotFoundException("Privilege", "id", 1L));
-        Privilege deletePrivilege = this.privilegeRepo.findById(4L).orElseThrow(() -> new ResourceNotFoundException("Privilege", "id", 1L));
-        Privilege disablePrivilege = this.privilegeRepo.findById(5L).orElseThrow(() -> new ResourceNotFoundException("Privilege", "id", 1L));
-        Privilege enablePrivilege = this.privilegeRepo.findById(6L).orElseThrow(() -> new ResourceNotFoundException("Privilege", "id", 1L));
-        Privilege fineAllPrivilege = this.privilegeRepo.findById(7L).orElseThrow(() -> new ResourceNotFoundException("Privilege", "id", 1L));
-        Privilege findByIdPrivilege = this.privilegeRepo.findById(8L).orElseThrow(() -> new ResourceNotFoundException("Privilege", "id", 1L));
-        Privilege importPrivilege = this.privilegeRepo.findById(9L).orElseThrow(() -> new ResourceNotFoundException("Privilege", "id", 1L));
-        Privilege exportPrivilege = this.privilegeRepo.findById(10L).orElseThrow(() -> new ResourceNotFoundException("Privilege", "id", 1L));
+        Privilege createPrivilege = this.privilegeRepo.findById(1L).orElseThrow(() -> new ResourceNotFoundException(Privilege.class.getSimpleName(), 1L));
+        Privilege readPrivilege = this.privilegeRepo.findById(2L).orElseThrow(() -> new ResourceNotFoundException(Privilege.class.getSimpleName(), 2L));
+        Privilege updatePrivilege = this.privilegeRepo.findById(3L).orElseThrow(() -> new ResourceNotFoundException(Privilege.class.getSimpleName(), 3L));
+        Privilege deletePrivilege = this.privilegeRepo.findById(4L).orElseThrow(() -> new ResourceNotFoundException(Privilege.class.getSimpleName(), 4L));
+        Privilege disablePrivilege = this.privilegeRepo.findById(5L).orElseThrow(() -> new ResourceNotFoundException(Privilege.class.getSimpleName(), 5L));
+        Privilege enablePrivilege = this.privilegeRepo.findById(6L).orElseThrow(() -> new ResourceNotFoundException(Privilege.class.getSimpleName(), 6L));
+        Privilege fineAllPrivilege = this.privilegeRepo.findById(7L).orElseThrow(() -> new ResourceNotFoundException(Privilege.class.getSimpleName(), 7L));
+        Privilege findByIdPrivilege = this.privilegeRepo.findById(8L).orElseThrow(() -> new ResourceNotFoundException(Privilege.class.getSimpleName(), 8L));
+        Privilege importPrivilege = this.privilegeRepo.findById(9L).orElseThrow(() -> new ResourceNotFoundException(Privilege.class.getSimpleName(), 9L));
+        Privilege exportPrivilege = this.privilegeRepo.findById(10L).orElseThrow(() -> new ResourceNotFoundException(Privilege.class.getSimpleName(), 10L));
 
 
         // Create roles

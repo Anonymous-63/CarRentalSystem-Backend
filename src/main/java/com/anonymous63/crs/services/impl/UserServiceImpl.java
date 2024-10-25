@@ -9,11 +9,16 @@ import com.anonymous63.crs.repositories.RoleRepo;
 import com.anonymous63.crs.repositories.UserRepo;
 import com.anonymous63.crs.services.UserService;
 import com.anonymous63.crs.utils.Constants;
+import com.anonymous63.crs.utils.Global;
+import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -22,82 +27,221 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final ModelMapper modelMapper;
     private final RoleRepo roleRepo;
+    private final Global global;
 
-    public UserServiceImpl(UserRepo userRepo, PasswordEncoder passwordEncoder, ModelMapper modelMapper, RoleRepo roleRepo) {
+    public UserServiceImpl(UserRepo userRepo, PasswordEncoder passwordEncoder, ModelMapper modelMapper, RoleRepo roleRepo, Global global) {
         this.userRepo = userRepo;
         this.passwordEncoder = passwordEncoder;
         this.modelMapper = modelMapper;
         this.roleRepo = roleRepo;
+        this.global = global;
     }
 
     public UserDto register(UserDto userDto) {
-        this.userRepo.findByUsername(userDto.getUsername()).ifPresent(u -> {
-            throw new IllegalArgumentException("Username already exists");
+
+        // Check if the username already exists
+        userRepo.findByUsername(userDto.getUsername()).ifPresent(user -> {
+            throw new DuplicateResourceException(User.class.getSimpleName(), userDto.getUsername());
         });
-        User user = this.modelMapper.map(userDto, User.class);
 
-        String password = userDto.getPassword();
-        user.setPassword(this.passwordEncoder.encode(password));
+        // Map DTO to Entity
+        User user = modelMapper.map(userDto, User.class);
 
-        if (user.getRoles() == null || user.getRoles().isEmpty()) {
-            Role userRole = this.roleRepo.findById(Constants.ROLE_USER)
-                    .orElseThrow(() -> new ResourceNotFoundException(Role.class.getSimpleName(), "name", "USER"));
-            user.getRoles().add(userRole);
-        } else {
-            for (Role role : user.getRoles()) {
-                Role newRole = this.roleRepo.findById(role.getId())
-                        .orElseThrow(() -> new ResourceNotFoundException(Role.class.getSimpleName(), "id", role.getId()));
-                user.getRoles().add(newRole);
-            }
+        // Encode the password
+        user.setPassword(passwordEncoder.encode(userDto.getPassword()));
+
+        // Set user roles
+        Set<Role> roles = (userDto.getRoles() == null || userDto.getRoles().isEmpty()) ?
+                Collections.singleton(roleRepo.findById(Constants.ROLE_USER)
+                        .orElseThrow(() -> new ResourceNotFoundException(Role.class.getSimpleName(), Constants.ROLE_USER))) :
+                userDto.getRoles().stream()
+                        .map(role -> roleRepo.findById(role.getId())
+                                .orElseThrow(() -> new ResourceNotFoundException(Role.class.getSimpleName(), role.getId())))
+                        .collect(Collectors.toSet());
+
+        user.setRoles(roles);
+
+        // Save and return the registered user
+        User registerUser = userRepo.save(user);
+        return modelMapper.map(registerUser, UserDto.class);
+    }
+
+
+    @Override
+    public UserDto save(UserDto userDto) {
+        // Check for duplicate username
+        userRepo.findByUsername(userDto.getUsername())
+                .ifPresent(user -> {
+                    throw new DuplicateResourceException(User.class.getSimpleName(), userDto.getUsername());
+                });
+
+        // Check for duplicate ID (if present)
+        if (userDto.getId() != null) {
+            userRepo.findById(userDto.getId())
+                    .ifPresent(user -> {
+                        throw new DuplicateResourceException(User.class.getSimpleName(), userDto.getId());
+                    });
         }
-        User registerUser = this.userRepo.save(user);
-        return this.modelMapper.map(registerUser, UserDto.class);
+
+        userRepo.findByPhoneNoOrEmailId(userDto.getPhoneNo(), userDto.getEmailId())
+                .ifPresent(user -> {
+                    throw new DuplicateResourceException(User.class.getSimpleName(), user.getPhoneNo().equals(userDto.getPhoneNo()) ? userDto.getPhoneNo() : userDto.getEmailId());
+                });
+
+        // Map UserDto to User entity
+        User user = modelMapper.map(userDto, User.class);
+
+        // Set password: default if empty, else use provided
+        String password = (userDto.getPassword() == null || userDto.getPassword().isEmpty()) ?
+                Constants.DEFAULT_PASSWORD + userDto.getUsername() : userDto.getPassword();
+        user.setPassword(passwordEncoder.encode(password));
+
+        // Set roles: default to ROLE_USER if none provided
+        Set<Role> roles = (userDto.getRoles() == null || userDto.getRoles().isEmpty()) ?
+                Collections.singleton(roleRepo.findById(Constants.ROLE_USER)
+                        .orElseThrow(() -> new ResourceNotFoundException(Role.class.getSimpleName(), Constants.ROLE_USER))) :
+                userDto.getRoles().stream()
+                        .map(role -> roleRepo.findById(role.getId())
+                                .orElseThrow(() -> new ResourceNotFoundException(Role.class.getSimpleName(), role.getId())))
+                        .collect(Collectors.toSet());
+        user.setRoles(roles);
+
+        // Save user and map back to UserDto
+        User savedUser = userRepo.save(user);
+        return modelMapper.map(savedUser, UserDto.class);
     }
 
     @Override
-    public UserDto save(UserDto entity) {
-        if (entity.getId() != null || entity.getUsername() != null && entity.getUsername().isEmpty()) {
-            this.userRepo.findById(entity.getId()).ifPresent(u -> {
-                throw new DuplicateResourceException(User.class.getSimpleName(), "id", entity.getId());
-            });
-            this.userRepo.findByUsername(entity.getUsername()).ifPresent(u -> {
-                throw new DuplicateResourceException(User.class.getSimpleName(), "username", entity.getUsername());
-            });
+    public UserDto update(Long id, UserDto userDto) {
+        // Check if the user exists
+        User existingUser = userRepo.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), id));
+
+        // Check for duplicate username (excluding the current user)
+        userRepo.findByUsername(userDto.getUsername())
+                .filter(user -> !user.getId().equals(existingUser.getId()))
+                .ifPresent(user -> {
+                    throw new DuplicateResourceException(User.class.getSimpleName(), userDto.getUsername());
+                });
+
+        // Check for duplicate phone number or email (excluding the current user)
+        userRepo.findByPhoneNoOrEmailId(userDto.getPhoneNo(), userDto.getEmailId())
+                .filter(user -> !user.getId().equals(existingUser.getId()))
+                .ifPresent(user -> {
+                    throw new DuplicateResourceException(User.class.getSimpleName(),
+                            user.getPhoneNo().equals(userDto.getPhoneNo()) ? userDto.getPhoneNo() : userDto.getEmailId());
+                });
+
+        // Map UserDto to existing User entity (ensure ID remains unchanged)
+        modelMapper.map(userDto, existingUser);
+
+        // Handle password: do not update if empty, else encode and set
+        if (userDto.getPassword() != null && !userDto.getPassword().isEmpty()) {
+            existingUser.setPassword(passwordEncoder.encode(userDto.getPassword()));
         }
 
-        User user = this.modelMapper.map(entity, User.class);
-        if (entity.getPassword() == null || entity.getPassword().isEmpty()) {
-            user.setPassword(this.passwordEncoder.encode(Constants.DEFAULT_PASSWORD + entity.getUsername()));
-        } else {
-            user.setPassword(this.passwordEncoder.encode(entity.getPassword()));
-        }
-        if (user.getRoles() == null || user.getRoles().isEmpty()) {
-            Role userRole = this.roleRepo.findById(Constants.ROLE_USER)
-                    .orElseThrow(() -> new ResourceNotFoundException(Role.class.getSimpleName(), "name", "USER"));
-            user.getRoles().add(userRole);
-        } else {
-            for (Role role : user.getRoles()) {
-                Role newRole = this.roleRepo.findById(role.getId())
-                        .orElseThrow(() -> new ResourceNotFoundException(Role.class.getSimpleName(), "id", role.getId()));
-                user.getRoles().add(newRole);
-            }
-        }
-        User saveUser = this.userRepo.save(user);
-        return this.modelMapper.map(saveUser, UserDto.class);
+        // Set roles: update roles while keeping existing ones if none provided
+        Set<Role> roles = (userDto.getRoles() == null || userDto.getRoles().isEmpty()) ?
+                existingUser.getRoles() : userDto.getRoles().stream()
+                .map(role -> roleRepo.findById(role.getId())
+                        .orElseThrow(() -> new ResourceNotFoundException(Role.class.getSimpleName(), role.getId())))
+                .collect(Collectors.toSet());
+        existingUser.setRoles(roles);
+
+        // Save updated user and map back to UserDto
+        User updatedUser = userRepo.save(existingUser); // This should not alter the ID
+        return modelMapper.map(updatedUser, UserDto.class);
     }
 
-    @Override
-    public UserDto update(UserDto entity) {
-        return null;
-    }
 
     @Override
-    public UserDto findById(Long aLong) {
-        return null;
+    public UserDto findById(Long id) {
+        User existingUser = userRepo.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), id));
+        return modelMapper.map(existingUser, UserDto.class);
     }
 
     @Override
     public List<UserDto> findAll() {
-        return List.of();
+        List<User> users = userRepo.findAll();
+        return users.stream()
+                .map(user -> modelMapper.map(user, UserDto.class))
+                .toList();
     }
+
+    @Override
+    @Transactional
+    public List<UserDto> enable(List<Long> ids) {
+        // Fetch users by IDs
+        List<User> users = userRepo.findAllById(ids);
+
+        // Check if any users were found
+        if (users.isEmpty()) {
+            throw new ResourceNotFoundException(User.class.getSimpleName(), ids);
+        }
+
+        // Disable each user
+        for (User user : users) {
+            user.setEnabled(true); // Set enabled status to false
+        }
+
+        // Save all updated users
+        List<User> updatedUsers = userRepo.saveAll(users);
+
+        // Map updated users to UserDto and return
+        return updatedUsers.stream()
+                .map(user -> modelMapper.map(user, UserDto.class))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<UserDto> disable(List<Long> ids) {
+        List<User> users = userRepo.findAllById(ids);
+
+        // Check if any users were found
+        if (users.isEmpty()) {
+            throw new ResourceNotFoundException(User.class.getSimpleName(), ids);
+        }
+
+        // Disable each user and save changes
+        for (User user : users) {
+            user.setEnabled(false);
+        }
+
+        // Save all updated users
+        List<User> updatedUsers = userRepo.saveAll(users);
+
+        // Map User entities to UserDto using ModelMapper
+        return updatedUsers.stream()
+                .map(user -> modelMapper.map(user, UserDto.class))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<UserDto> delete(List<Long> ids) {
+        // Retrieve users based on IDs
+        List<User> users = userRepo.findAllById(ids);
+
+        // Check if any users were found
+        if (users.isEmpty()) {
+            throw new ResourceNotFoundException(User.class.getSimpleName(), ids);
+        }
+
+        // Convert users to DTOs before deletion
+        List<UserDto> deletedUsers = users.stream()
+                .map(user -> modelMapper.map(user, UserDto.class))
+                .collect(Collectors.toList());
+
+        // Delete users
+        userRepo.deleteAll(users);
+
+        // Return the list of deleted users
+        return deletedUsers;
+    }
+
+    @Override
+    public void deleteAll() {
+        userRepo.deleteAll();
+    }
+
 }

@@ -1,6 +1,7 @@
 package com.anonymous63.crs.security;
 
 import com.anonymous63.crs.exceptions.ResourceNotFoundException;
+import com.anonymous63.crs.models.User;
 import com.anonymous63.crs.repositories.UserRepo;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -19,6 +20,6 @@ public class CustomUserDetailService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         return this.userRepo.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "email", username));
+                .orElseThrow(() -> new ResourceNotFoundException(User.class.getSimpleName(), username));
     }
 }
