@@ -1,7 +1,10 @@
 package com.anonymous63.crs.dtos;
 
 import com.anonymous63.crs.models.Car;
-import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 import java.util.List;
@@ -11,7 +14,11 @@ public class CompanyDto {
 
     private Long id;
 
+    @NotNull(message = "Name cannot be null.")
+    @Size(min = 3, max = 20, message = "Name must be between {min} and {max} characters long.")
+    @Pattern(regexp = "^[a-zA-Z]+$", message = "Name must contain only alphabetic characters.")
     private String name;
 
-    private List<Car> cars;
+    @JsonProperty(defaultValue = "true")
+    private Boolean enabled = true;
 }

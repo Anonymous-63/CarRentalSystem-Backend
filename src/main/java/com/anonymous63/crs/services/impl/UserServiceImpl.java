@@ -172,23 +172,15 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public List<UserDto> enable(List<Long> ids) {
-        // Fetch users by IDs
         List<User> users = userRepo.findAllById(ids);
 
-        // Check if any users were found
-        if (users.isEmpty()) {
+        if (users.isEmpty())
             throw new ResourceNotFoundException(User.class.getSimpleName(), ids);
-        }
 
-        // Disable each user
-        for (User user : users) {
-            user.setEnabled(true); // Set enabled status to false
-        }
+        for (User user : users)
+            user.setEnabled(true);
 
-        // Save all updated users
         List<User> updatedUsers = userRepo.saveAll(users);
-
-        // Map updated users to UserDto and return
         return updatedUsers.stream()
                 .map(user -> modelMapper.map(user, UserDto.class))
                 .collect(Collectors.toList());
@@ -198,44 +190,30 @@ public class UserServiceImpl implements UserService {
     public List<UserDto> disable(List<Long> ids) {
         List<User> users = userRepo.findAllById(ids);
 
-        // Check if any users were found
-        if (users.isEmpty()) {
+        if (users.isEmpty())
             throw new ResourceNotFoundException(User.class.getSimpleName(), ids);
-        }
 
-        // Disable each user and save changes
-        for (User user : users) {
+        for (User user : users)
             user.setEnabled(false);
-        }
 
-        // Save all updated users
         List<User> updatedUsers = userRepo.saveAll(users);
-
-        // Map User entities to UserDto using ModelMapper
         return updatedUsers.stream()
                 .map(user -> modelMapper.map(user, UserDto.class))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
     public List<UserDto> delete(List<Long> ids) {
-        // Retrieve users based on IDs
         List<User> users = userRepo.findAllById(ids);
 
-        // Check if any users were found
-        if (users.isEmpty()) {
+        if (users.isEmpty())
             throw new ResourceNotFoundException(User.class.getSimpleName(), ids);
-        }
 
-        // Convert users to DTOs before deletion
         List<UserDto> deletedUsers = users.stream()
                 .map(user -> modelMapper.map(user, UserDto.class))
-                .collect(Collectors.toList());
+                .toList();
 
-        // Delete users
         userRepo.deleteAll(users);
-
-        // Return the list of deleted users
         return deletedUsers;
     }
 

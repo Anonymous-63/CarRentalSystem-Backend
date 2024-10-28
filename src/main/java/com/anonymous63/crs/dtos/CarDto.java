@@ -1,33 +1,28 @@
 package com.anonymous63.crs.dtos;
 
-import com.anonymous63.crs.models.Company;
 import com.anonymous63.crs.models.Model;
-import jakarta.persistence.Column;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import lombok.Data;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 public class CarDto {
 
     private Long id;
 
-    private String name;
+    private ModelDto model;
 
-    private Company company;
-
-    private Model model;
+    private LocalDateTime registerDatetime;
 
     private String licensePlate;
 
-    private Boolean isAutoTransmission; // changed to Boolean
-
     private String color;
 
-    private int year;
+    private List<String> photos;
 
     private int seats;
 
-    private String owner;
+    private UserDto owner;
 
 }

@@ -3,11 +3,10 @@ package com.anonymous63.crs.controllers;
 import com.anonymous63.crs.dtos.UserDto;
 import com.anonymous63.crs.payloads.response.APIResponse;
 import com.anonymous63.crs.services.UserService;
-import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 

@@ -54,6 +54,7 @@ public class DataInitializer implements CommandLineRunner {
         // Create roles
         Role adminRole = createRole(1L, "ROLE_ADMIN", Arrays.asList(createPrivilege, readPrivilege, updatePrivilege, deletePrivilege, disablePrivilege, enablePrivilege, fineAllPrivilege, findByIdPrivilege, importPrivilege, exportPrivilege));
         Role userRole = createRole(2L, "ROLE_USER", Arrays.asList(readPrivilege, fineAllPrivilege, findByIdPrivilege));
+        Role ownerRole = createRole(2L, "ROLE_Owner", Arrays.asList(createPrivilege, readPrivilege, updatePrivilege, findByIdPrivilege));
 
         // Save roles
         roleRepo.save(adminRole);

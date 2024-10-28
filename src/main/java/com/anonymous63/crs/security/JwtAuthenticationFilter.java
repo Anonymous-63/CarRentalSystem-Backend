@@ -1,5 +1,7 @@
 package com.anonymous63.crs.security;
 
+import com.anonymous63.crs.dtos.ErrorDto;
+import com.anonymous63.crs.payloads.response.APIResponse;
 import com.anonymous63.crs.utils.JwtUtil;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
@@ -60,13 +62,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             return jwtUtil.getUsernameFromToken(jwtToken);
         } catch (IllegalArgumentException e) {
-            logger.warn("Unable to get JWT Token", e);
+            logger.error("Unable to get JWT Token", e);
         } catch (ExpiredJwtException e) {
-            logger.warn("JWT Token has expired", e);
+            logger.error("JWT Token has expired", e);
         } catch (MalformedJwtException e) {
-            logger.warn("JWT Token is malformed", e);
+            logger.error("JWT Token is malformed", e);
         } catch (Exception e) {
-            logger.warn("JWT Token is invalid", e);
+            logger.error("JWT Token is invalid", e);
         }
         return null;
     }
