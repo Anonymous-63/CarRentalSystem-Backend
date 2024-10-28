@@ -27,14 +27,12 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final ModelMapper modelMapper;
     private final RoleRepo roleRepo;
-    private final Global global;
 
-    public UserServiceImpl(UserRepo userRepo, PasswordEncoder passwordEncoder, ModelMapper modelMapper, RoleRepo roleRepo, Global global) {
+    public UserServiceImpl(UserRepo userRepo, PasswordEncoder passwordEncoder, ModelMapper modelMapper, RoleRepo roleRepo) {
         this.userRepo = userRepo;
         this.passwordEncoder = passwordEncoder;
         this.modelMapper = modelMapper;
         this.roleRepo = roleRepo;
-        this.global = global;
     }
 
     public UserDto register(UserDto userDto) {
