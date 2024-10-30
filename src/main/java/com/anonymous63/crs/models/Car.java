@@ -14,24 +14,27 @@ public class Car {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 20)
-    private String name;
-
     @ManyToOne
     @JoinColumn(nullable = false)
     private Model model;
 
-    private String licensePlate;
-
-    private Boolean isAutoTransmission; // changed to Boolean
-
+    @Column(nullable = false, length = 20)
     private String color;
 
-    private int year;
-
+    @Column(nullable = false, length = 2)
     private int seats;
 
-    private String owner;
+    @Column(nullable = false, length = 20)
+    private String transmission;
+
+    @Column(nullable = false, length = 20)
+    private String fuelType;
+
+    @Column(nullable = false, length = 20)
+    private String licensePlate;
+
+    @Column(nullable = false)
+    private LocalDateTime registrationDate;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
